@@ -49,8 +49,9 @@ case class AzureUtil(private val connectionString: String) extends StorageUtil {
     localBasePath: String,
     files: List[String]): Unit = {
     val container = this.blobClient.getContainerReference(containerName)
+    val localOutputAbsPath = new File(localBasePath).getAbsolutePath
     files.foreach(item =>
-      uploadSingleFile(container, prefix + item.substring(localBasePath.length), item))
+      uploadSingleFile(container, prefix + item.substring(localOutputAbsPath.length), item))
   }
 
   private def uploadSingleFile(
@@ -63,7 +64,7 @@ case class AzureUtil(private val connectionString: String) extends StorageUtil {
 
       if (uploadFileName.endsWith(".csv")) {
         val file: BufferedSource = Source.fromFile(uploadFileName, "UTF-8")
-        val content: String = file.getLines().mkString
+        val content: String = file.getLines().mkString("\n")
         file.close()
 
         // Use the other signature to accommodate access condition, retry policies

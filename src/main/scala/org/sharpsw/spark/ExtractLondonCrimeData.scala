@@ -92,7 +92,7 @@ object ExtractLondonCrimeData {
     logger.info("Printing data set schema information:")
     headerColumns.foreach(logger.info(_))
 
-    // performAnalysis(sparkSession, contents, destinationFolder)
+    performAnalysis(sparkSession, contents, destinationFolder)
     logger.info("Finished Extract London Crime data information")
     sparkSession.stop()
 
