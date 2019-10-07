@@ -2,6 +2,9 @@ package org.sharpsw.spark.utils
 
 import com.amazonaws.services.s3.model.Region
 
+/*
+ * TODO: Read configuration from a config file
+ */
 object StorageUtilFactory {
 
   def getStorageUtil(cloudStorageProvider: String): StorageUtil = {
