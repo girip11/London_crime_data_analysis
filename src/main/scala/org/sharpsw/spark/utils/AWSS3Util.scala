@@ -1,18 +1,17 @@
 package org.sharpsw.spark.utils
 
-import java.io.File.separator
-import java.io.{File, FileInputStream, FileOutputStream}
+import java.io.{File, FileInputStream}
 import java.nio.file.Paths
 
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.{AWSCredentials, AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
+import com.amazonaws.services.s3.model.{GetObjectRequest, ObjectMetadata, PutObjectRequest}
 import org.apache.log4j.Logger
 import org.sharpsw.spark.CmdLineOptions
 
-case class S3Util(
+case class AWSS3Util(
   private val serviceEndpoint: String,
   private val serviceRegion: String,
   private val accessKey: String,
@@ -22,10 +21,13 @@ case class S3Util(
   @transient lazy val logger: Logger = Logger.getLogger(getClass.getName)
 
   private val credentials: AWSCredentials =
-    new BasicAWSCredentials(accessKey, secretKey);
+    new BasicAWSCredentials(accessKey, secretKey)
 
-  private val clientConfiguration: ClientConfiguration = new ClientConfiguration();
-  clientConfiguration.setSignerOverride("AWSS3V4SignerType");
+  private val clientConfiguration: ClientConfiguration = {
+    val clientConfig = new ClientConfiguration()
+    clientConfig.setSignerOverride("AWSS3V4SignerType")
+    clientConfig
+  }
 
   private val s3Client = AmazonS3ClientBuilder
     .standard()
@@ -42,25 +44,17 @@ case class S3Util(
     bucket: String,
     pathToInputFile: String,
     local: String = "."): String = {
-    val o = s3Client.getObject(bucket, pathToInputFile)
-    val s3is = o.getObjectContent
     val outputFileName = if (pathToInputFile.contains("/")) {
       pathToInputFile.split("/").last
     } else {
       pathToInputFile
     }
 
-    val path = Paths.get(local).toAbsolutePath()
-    val outputFileAbsolutePath = path + separator + outputFileName
-    val fos = new FileOutputStream(new File(outputFileAbsolutePath))
-    val read_buf = new Array[Byte](1024)
-    var len = s3is.read(read_buf)
-    while (len > 0) {
-      fos.write(read_buf, 0, len)
-      len = s3is.read(read_buf)
-    }
-    s3is.close()
-    fos.close()
+    val path = Paths.get(local).toAbsolutePath
+    val outputFileAbsolutePath = path + File.separator + outputFileName
+
+    s3Client
+      .getObject(new GetObjectRequest(bucket, pathToInputFile), new File(outputFileAbsolutePath))
 
     // return
     outputFileAbsolutePath
