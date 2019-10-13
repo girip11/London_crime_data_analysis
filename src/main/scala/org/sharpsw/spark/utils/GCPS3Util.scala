@@ -87,13 +87,15 @@ case class GCPS3Util(
     bucket: String,
     prefix: String,
     localBasePath: String,
-    files: List[String]): Unit =
+    files: List[String]): Unit = {
+    val outputAbsolutePath = Paths.get(localBasePath).toAbsolutePath.toString
     files.foreach(
       item =>
         uploadSingleFile(
           bucket,
-          prefix + item.substring(localBasePath.length).replaceAll("\\\\", "/"),
+          prefix + item.substring(outputAbsolutePath.length).replaceAll("\\\\", "/"),
           item))
+  }
 
   private def uploadSingleFile(bucket: String, key: String, uploadFileName: String): Unit = {
     try {
